@@ -19,5 +19,5 @@ module Result =
         bind (f >> Ok) r
 
     let apply (a: Result<('t -> 'u), 'e>) (r: Result<'t, 'e>) : Result<'u, 'e> =
-        bind (fun f -> map f r) a 
+        bind (fun f -> map f r) a
 
