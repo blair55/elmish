@@ -2,7 +2,7 @@ namespace Docs
 
 open Elmish
 open Elmish.Browser.Navigation
-open Elmish.UrlParser
+open Elmish.Browser.UrlParser
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
@@ -50,19 +50,16 @@ module App =
 
   let pageParser: Parser<Page->_,_> =
     oneOf [
-      format Home (s "home")
-      format About (s "about")
+      map Home (s "home")
+      map About (s "about")
     ]
 
-  let hashParser (location: Location) =
-    UrlParser.parse id pageParser (location.hash.Substring 1)
-
-  let urlUpdate (result: Elmish.Result<Page, string>) model =
+  let urlUpdate (result: Option<Page>) model =
     match result with
-    | Error e ->
-      Browser.console.error("Error parsing url:", e)
+    | None ->
+      Browser.console.error("Error parsing url")
       ( model, Navigation.modifyUrl (toHash model.CurrentPage) )
-    | Ok page ->
+    | Some page ->
         { model with CurrentPage = page }, []
 
   type Msg =
@@ -80,14 +77,35 @@ module App =
   open Fable.Helpers.Snabbdom.Props
 
   let view model dispatch =
+    // let navbarHtml =
+    //   Html.map NavbarActions (Navbar.view model.SubModels.Navbar)
+
+    // let headerHtml =
+    //   Html.map HeaderActions (Header.view model.SubModels.Header)
+
     div
       []
-      [ unbox "coucou" ]
+      [ div
+          [ props [
+              ClassName "navbar-bg"
+            ]
+          ]
+          [ div
+              [ props [
+                  ClassName "container"
+                ]
+              ]
+              [ Navbar.view
+              ]
+          ]
+        // headerHtml
+        // pageHtml
+      ]
 
   open Elmish.Snabbdom
 
   // App
   Program.mkProgram init update view
-  |> Program.toNavigable hashParser urlUpdate
+  |> Program.toNavigable (parseHash pageParser) urlUpdate
   |> Program.withSnabbdom "elmish-app"
   |> Program.run
